@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id_usuario Int    @id @default(autoincrement())
+  nome_usuario String
+  senha_usuario String
+
+  cargo String
+
+  created_at DateTime? @default(now())
+  @@map("usuarios")
+}
+
+model Produto {
+  id_produto       Int    @id @default(autoincrement())
+  nome_produto     String
+  preco_custo      Decimal @db.Decimal(10, 4)
+  preco_venda      Decimal @db.Decimal(10, 4)
+  margem_lucro     Decimal @db.Decimal(5, 4)
+  peso_produto     Decimal @db.Decimal(10, 4)
+  unidade_produto  String
+  saldo_atual      Decimal @db.Decimal(10, 4)
+  flag_venda_sem_estoque String
+
+  unidade          Unidade @relation(fields: [id_unidade], references: [id_unidade])
+  id_unidade       Int
+
+  created_at       DateTime? @default(now())
+
+  @@map("produtos")
+  ItemVenda ItemVenda[]
+}
+
+model Unidade {
+  id_unidade Int    @id @default(autoincrement())
+  nome_unidade String @unique
+
+  produtos         Produto[]
+
+  created_at DateTime? @default(now())
+  @@map("unidades")
+
+}
+
+model Venda {
+  id_venda            Int         @id @default(autoincrement())
+  total_venda         Decimal     @db.Decimal(10, 4)
+  peso_total_venda    Decimal     @db.Decimal(10, 4)
+  total_desconto      Decimal     @db.Decimal(10, 4)
+
+  id_usuario           Int
+  id_forma_recebimento Int
+
+  itens               ItemVenda[]
+  recebimento         FormaRecebimento    @relation(fields: [id_forma_recebimento], references: [id_forma_recebimento])
+  created_at          DateTime?   @default(now())
+
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id_itemvenda      Int         @id @default(autoincrement())
+  id_venda          Int
+  id_produto        Int
+
+  nome_produto      String
+  preco_produto     Decimal     @db.Decimal(10, 4)
+  peso_produto      Decimal     @db.Decimal(10, 4)
+
+  unidade_produto   String
+  quantidade        Int
+
+  venda             Venda       @relation(fields: [id_venda], references: [id_venda])
+  produto           Produto     @relation(fields: [id_produto], references: [id_produto])
+
+  created_at        DateTime?   @default(now())
+
+  @@map("itemvenda")
+}
+
+model FormaRecebimento{
+  id_forma_recebimento          Int         @id @default(autoincrement())
+  descricao_forma_recebimento   String
+
+  vendas                        Venda[]
+
+  @@map("forma_recebimento")
+}
+
+
+model Caixa{
+  id_caixa  Int         @id @default(autoincrement())
+
+  data_abertura DateTime
+  hora_abertura String
+
+  data_fechamento DateTime
+  hora_fechamento String
+
+  valor_abertura Decimal     @db.Decimal(10, 4)
+  valor_fechamento Decimal     @db.Decimal(10, 4)
+
+
+  usuario_abertura String
+  usuario_fechamento String
+
+  troco_dinheiro Decimal     @db.Decimal(10, 4)
+  troco_moedas Decimal     @db.Decimal(10, 4)
+
+}
